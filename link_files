@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+if [ -n "$1" ]; then
+    if [ -d "$1" ]; then
+        pushd $1
+        for source_file in *
+        do
+            target_file="${HOME}/.${source_file}"
+            cmd="ln -sf $(pwd)/${source_file} ${target_file}"
+            echo "${cmd}"
+            ${cmd}
+        done
+        popd
+    fi
+fi
+
