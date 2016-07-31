@@ -1,8 +1,18 @@
 #!/usr/bin/env bash
 
-if [ -n "$1" ]; then
-    if [ -d "$1" ]; then
-        pushd $1
+if [ "$1" == "" ]; then
+    if [ -f "/etc/shortname" ]; then
+        subdir=$(cat /etc/shortname | head -1 | xargs)
+    else
+        subdir=""
+    fi
+else
+    subdir="$1"
+fi
+
+if [ ! "${subdir}" == "" ]; then
+    if [ -d "${subdir}" ]; then
+        pushd "${subdir}"
         for source_file in *
         do
             target_file="${HOME}/.${source_file}"
