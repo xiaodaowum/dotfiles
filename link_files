@@ -1,26 +1,126 @@
 #!/usr/bin/env bash
 
-if [ "$1" == "" ]; then
-    if [ -f "/etc/shortname" ]; then
-        subdir=$(cat /etc/shortname | head -1 | xargs)
-    else
-        subdir=""
-    fi
-else
-    subdir="$1"
-fi
+#
+# Script to link certain dotfiles ($HOME/.<some file>) into a git repo containing this script
+#
 
-if [ ! "${subdir}" == "" ]; then
-    if [ -d "${subdir}" ]; then
-        pushd "${subdir}"
-        for source_file in *
-        do
-            target_file="${HOME}/.${source_file}"
-            cmd="ln -sf $(pwd)/${source_file} ${target_file}"
-            echo "${cmd}"
-            ${cmd}
-        done
-        popd
-    fi
+DRY_RUN=false
+INCLUDE_DOT_BASH_FILES=false
+
+DOT_BASH_FILES=".profile .bash_profile .bashrc"
+DOTFILES_TO_LINK=".aws .emacs .emacs.d .direnvrc .gemrc .gitconfig .gitignore_global .gnupg  .pypirc .ssh .tm_properties"
+if [[ "$INCLUDE_DOT_BASH_FILES" == "true" ]]; then
+    DOTFILES_TO_LINK="${DOTFILES_TO_LINK} ${DOT_BASH_FILES}"
 fi
+DOTFILES_PRIVATE=".aws .gnupg .ssh"
+DOTFILES_BACKUP_DIR="${HOME}/.dotfiles_backup"
+DOTFILES_BASE_DIRECTORY="$( cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+function get_backup_subdirectory() {
+    if [[ "${DRY_RUN}" != "true" ]]; then
+        mkdir -p "${DOTFILES_BACKUP_DIR}"
+    fi
+    echo "${DOTFILES_BACKUP_DIR}"
+}
+
+function get_dotfiles_subdirectory() {
+    if [[ -z "$1" ]]; then
+        if [ -f "/etc/shortname" ]; then
+            subdir=$(cat /etc/shortname | head -1 | xargs)
+        elif [ -x "/bin/hostname" ]; then
+            subdir=$(hostname | xargs)
+        else
+            subdir=""
+        fi
+    else
+        subdir="$1"
+    fi
+    echo "${DOTFILES_BASE_DIRECTORY}/${subdir}"
+}
+
+function trim_leading_dot() {
+    trimmed_path=""
+    if [[ -n "$1" ]]; then
+      trimmed_path="$(echo $1  | sed s/^\.//g )"
+    fi
+    echo "${trimmed_path}"
+}
+
+function is_private() {
+    private_dir=false
+    if [[ -n "$1" ]]; then
+        for p_dir in ${DOTFILES_PRIVATE}
+        do
+            if [[ "$1" == "${p_dir}" ]]; then
+                private_dir=true
+                break
+            fi
+        done
+    fi
+    echo ${private_dir}
+}
+
+function link_dotfiles() {
+
+    backup_directory="$(get_backup_subdirectory)"
+    dotfiles_subdirectory="$(get_dotfiles_subdirectory)"
+
+    pushd ${HOME} &>/dev/null
+
+    for source_item in ${DOTFILES_TO_LINK}
+    do
+        echo "${source_item}"
+
+        if [[ -h "${source_item}" ]]; then
+            echo "\"${source_item}\" is already linked. Skipping"
+        else
+            if [[ -e "${source_item}" ]]; then
+
+                # Backup item locally in case something goes wrong
+
+                if [[ -d "${source_item}" ]]; then
+                    cmd="rsync -a ${source_item} ${backup_directory}"
+                else
+                    cmd="cp ${source_item} ${backup_directory}"
+                fi
+                echo "${cmd}"
+                if [[ "${DRY_RUN}" != "true" ]]; then
+                    ${cmd}
+                fi
+
+                #Copy to dotfiles repo
+                destination_dir="${dotfiles_subdirectory}"
+                if [[ "$(is_private "${source_item}")" == "true" ]]; then
+                    destination_dir="${destination_dir}/private"
+                fi
+                destination_dir="${destination_dir}/$(trim_leading_dot "${source_item}" )"
+                mkdir -p "${destination_dir}"
+                if [[ -d "${source_item}" ]]; then
+                    copy_cmd="rsync -a ${source_item}/ ${destination_dir}"
+                else
+                    copy_cmd="cp ${source_item} ${destination_dir}"
+                fi
+                echo "${copy_cmd}"
+                if [[ "${DRY_RUN}" != "true" ]]; then
+                    ${copy_cmd}
+                fi
+                
+                # Remove source 
+                cmd="rm -rf ${source_item}"
+                echo "${cmd}"
+                ${cmd}
+                # Link to destination
+                cmd="ln -s ${destination_dir} ${source_item}"
+                echo "${cmd}"
+                ${cmd}
+
+            fi
+        fi
+    done
+
+    popd  &>/dev/null
+}
+
+link_dotfiles
+
 
