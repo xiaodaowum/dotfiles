@@ -69,7 +69,7 @@ function link_dotfiles() {
 
     for source_item in ${DOTFILES_TO_LINK}
     do
-        echo "${source_item}"
+        echo "Checking ${source_item}"
 
         if [[ -h "${source_item}" ]]; then
             echo "\"${source_item}\" is already linked. Skipping"
@@ -93,12 +93,15 @@ function link_dotfiles() {
                 if [[ "$(is_private "${source_item}")" == "true" ]]; then
                     destination_dir="${destination_dir}/private"
                 fi
-                destination_dir="${destination_dir}/$(trim_leading_dot "${source_item}" )"
-                mkdir -p "${destination_dir}"
                 if [[ -d "${source_item}" ]]; then
+                    destination_dir="${destination_dir}/$(trim_leading_dot "${source_item}" )"
+                    mkdir -p "${destination_dir}"
                     copy_cmd="rsync -a ${source_item}/ ${destination_dir}"
                 else
-                    copy_cmd="cp ${source_item} ${destination_dir}"
+                    destination_dir="${destination_dir}"
+                    mkdir -p "${destination_dir}"
+                    destination_name="$(trim_leading_dot "${source_item}" )"
+                    copy_cmd="cp ${source_item} ${destination_dir}/${destination_name}"
                 fi
                 echo "${copy_cmd}"
                 if [[ "${DRY_RUN}" != "true" ]]; then
@@ -110,10 +113,16 @@ function link_dotfiles() {
                 echo "${cmd}"
                 ${cmd}
                 # Link to destination
-                cmd="ln -s ${destination_dir} ${source_item}"
+                if [[ -d "${source_item}" ]]; then
+                    cmd="ln -s ${destination_dir} ${source_item}"
+                else
+                    cmd="ln -s ${destination_dir}/${destination_name} ${source_item}"
+                fi
                 echo "${cmd}"
                 ${cmd}
 
+            else
+                echo "${source_item} not found"
             fi
         fi
     done
