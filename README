@@ -1,0 +1,9 @@
+Personal dotfiles
+=================
+
+Manages dotfiles not managed by
+
+- bash-it git@github.com:Bash-it/bash-it.git
+
+- my-bash-it git@github.com:tflynn/my-bash-it.git
+
