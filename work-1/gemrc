@@ -1,0 +1,6 @@
+gem: --no-ri --no-rdoc
+#sources: 
+#- https://artifactory.flexilis.net/artifactory/api/gems/lookout-gems/
+#- http://gems.rubyforge.org/
+#- http://rubygems.org/
+verbose: true

@@ -1,0 +1,42 @@
+[user]
+	name = Tracy Flynn
+	email = tracy.flynn@lookout.com
+[core]
+	excludesfile = /Users/tflynn/.gitignore_global
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/SourceTree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
+[alias]
+	co = checkout
+	ci = commit -v
+	st = status
+	cat = cat-file
+	br = branch
+	ffwd = pull --rebase
+	changes = diff --name-status -r
+	diffstat = diff --stat -r
+[branch]
+	autosetuprebase = always
+[rerere]
+	enabled = 1
+[rebase]
+	stat = true
+[lookout "gerrit"]
+	host = gerrit.corp.lookout.com
+	port = 29418
+	protocol = ssh
+	user = TFlynn
+[lookout "source"]
+	host = source.corp.lookout.com
+	port = 22
+	protocol = ssh
+	user = git
+[push]
+	default = matching
+[commit]
+	template = /Users/tflynn/.stCommitMsg
+[credential]
+	helper = osxkeychain

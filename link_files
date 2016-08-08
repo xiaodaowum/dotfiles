@@ -6,13 +6,17 @@
 
 DRY_RUN=false
 INCLUDE_DOT_BASH_FILES=false
+INCLUDE_PRIVATE=false
 
 DOT_BASH_FILES=".profile .bash_profile .bashrc"
-DOTFILES_TO_LINK=".aws .emacs .emacs.d .direnvrc .gemrc .gitconfig .gitignore_global .gnupg  .pypirc .ssh .tm_properties"
+DOTFILES_TO_LINK=".emacs .emacs.d .direnvrc .gemrc .gitconfig .gitignore_global .pypirc .tm_properties"
 if [[ "$INCLUDE_DOT_BASH_FILES" == "true" ]]; then
     DOTFILES_TO_LINK="${DOTFILES_TO_LINK} ${DOT_BASH_FILES}"
 fi
 DOTFILES_PRIVATE=".aws .gnupg .ssh"
+if [[ "${INCLUDE_PRIVATE=false}" == "true" ]]; then
+  DOTFILES_TO_LINK="${DOTFILES_TO_LINK} ${DOTFILES_PRIVATE}"
+fi
 DOTFILES_BACKUP_DIR="${HOME}/.dotfiles_backup"
 DOTFILES_BASE_DIRECTORY="$( cd "$(dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
